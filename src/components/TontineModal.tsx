@@ -4,17 +4,18 @@ import type React from "react"
 import { useState } from "react"
 import ParticipantsTab from "./ParticipantsTab"
 import MonthlyTab from "./MonthlyTab"
-import type { Tontine } from "../types"
+import type { Tontine, User } from "../types"
 
 interface TontineModalProps {
   tontine: Tontine
   onClose: () => void
   onRefresh: () => void
+  currentUser: User
 }
 
 type TabType = "participants" | "monthly"
 
-const TontineModal: React.FC<TontineModalProps> = ({ tontine, onClose, onRefresh }) => {
+const TontineModal: React.FC<TontineModalProps> = ({ tontine, onClose, onRefresh, currentUser }) => {
   const [activeTab, setActiveTab] = useState<TabType>("participants")
 
   return (
@@ -67,9 +68,11 @@ const TontineModal: React.FC<TontineModalProps> = ({ tontine, onClose, onRefresh
           </div>
 
           {/* Tab Content */}
-          {activeTab === "participants" && <ParticipantsTab tontine={tontine} onRefresh={onRefresh} />}
+          {activeTab === "participants" && (
+            <ParticipantsTab tontine={tontine} onRefresh={onRefresh} currentUser={currentUser} />
+          )}
 
-          {activeTab === "monthly" && <MonthlyTab tontine={tontine} onRefresh={onRefresh} />}
+          {activeTab === "monthly" && <MonthlyTab tontine={tontine} onRefresh={onRefresh} currentUser={currentUser} />}
         </div>
       </div>
     </div>

@@ -3,14 +3,15 @@
 import type React from "react"
 import { useState } from "react"
 import { db } from "../../lib/database"
-import type { Tontine, ParticipantFormData } from "../types"
+import type { Tontine, ParticipantFormData, User } from "../types"
 
 interface ParticipantsTabProps {
   tontine: Tontine
   onRefresh: () => void
+  currentUser: User
 }
 
-const ParticipantsTab: React.FC<ParticipantsTabProps> = ({ tontine, onRefresh }) => {
+const ParticipantsTab: React.FC<ParticipantsTabProps> = ({ tontine, onRefresh, currentUser }) => {
   const [participantForm, setParticipantForm] = useState<ParticipantFormData>({
     prenom: "",
     nom: "",
@@ -53,10 +54,13 @@ const ParticipantsTab: React.FC<ParticipantsTabProps> = ({ tontine, onRefresh })
         dateAjout: new Date().toISOString(),
       }
 
-      await db.createParticipant({
-        ...newParticipant,
-        tontineId: tontine.id,
-      })
+      await db.createParticipant(
+        {
+          ...newParticipant,
+          tontineId: tontine.id,
+        },
+        currentUser.id,
+      )
 
       setParticipantForm({
         prenom: "",
@@ -78,7 +82,7 @@ const ParticipantsTab: React.FC<ParticipantsTabProps> = ({ tontine, onRefresh })
       setIsLoading(true)
 
       try {
-        await db.deleteParticipant(participantId, tontine.id)
+        await db.deleteParticipant(participantId, tontine.id, currentUser.id)
         onRefresh()
       } catch (error) {
         console.error("Erreur lors de la suppression:", error)
@@ -105,6 +109,7 @@ const ParticipantsTab: React.FC<ParticipantsTabProps> = ({ tontine, onRefresh })
                 value={participantForm.prenom}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-bleu-ciel focus:border-transparent text-sm"
+                placeholder="Prénom"
               />
             </div>
             <div>
@@ -116,6 +121,7 @@ const ParticipantsTab: React.FC<ParticipantsTabProps> = ({ tontine, onRefresh })
                 value={participantForm.nom}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-bleu-ciel focus:border-transparent text-sm"
+                placeholder="Nom"
               />
             </div>
             <div>
@@ -124,6 +130,7 @@ const ParticipantsTab: React.FC<ParticipantsTabProps> = ({ tontine, onRefresh })
                 name="parts"
                 type="number"
                 min="1"
+                max="5"
                 required
                 value={participantForm.parts}
                 onChange={handleChange}
@@ -155,48 +162,61 @@ const ParticipantsTab: React.FC<ParticipantsTabProps> = ({ tontine, onRefresh })
         <h4 className="text-base sm:text-lg font-semibold text-bleu-nuit mb-3 sm:mb-4">
           Liste des Participants ({tontine.participants.length}/{tontine.nombreParticipants})
         </h4>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[500px]">
-            <thead>
-              <tr className="border-b border-slate-200">
-                <th className="text-left py-3 px-2 sm:px-4 font-semibold text-slate-700 text-sm">Participant</th>
-                <th className="text-left py-3 px-2 sm:px-4 font-semibold text-slate-700 text-sm">Parts</th>
-                <th className="text-left py-3 px-2 sm:px-4 font-semibold text-slate-700 text-sm">Montant</th>
-                <th className="text-left py-3 px-2 sm:px-4 font-semibold text-slate-700 text-sm">Mois de Réception</th>
-                <th className="text-left py-3 px-2 sm:px-4 font-semibold text-slate-700 text-sm">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tontine.participants.map((participant) => (
-                <tr key={participant.id} className="border-b border-slate-100 hover:bg-slate-50">
-                  <td className="py-3 px-2 sm:px-4">
-                    <div className="font-medium text-slate-800 text-sm">
-                      {participant.prenom} {participant.nom}
-                    </div>
-                  </td>
-                  <td className="py-3 px-2 sm:px-4 text-slate-700 text-sm">{participant.parts}</td>
-                  <td className="py-3 px-2 sm:px-4 text-slate-700 text-sm">
-                    {(tontine.montant * participant.parts).toLocaleString()} FC
-                  </td>
-                  <td className="py-3 px-2 sm:px-4 text-slate-700 text-sm">
-                    <span className="bg-bleu-ciel text-white px-2 py-1 rounded-full text-xs">
-                      Mois {getParticipantMonth(tontine, participant.id)}
-                    </span>
-                  </td>
-                  <td className="py-3 px-2 sm:px-4">
-                    <button
-                      onClick={() => handleRemove(participant.id)}
-                      disabled={isLoading}
-                      className="px-2 sm:px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition-colors disabled:opacity-50"
-                    >
-                      Supprimer
-                    </button>
-                  </td>
+
+        {tontine.participants.length === 0 ? (
+          <div className="text-center py-8">
+            <div className="text-4xl mb-2">👥</div>
+            <p className="text-slate-500">Aucun participant ajouté</p>
+            <p className="text-slate-400 text-sm mt-2">
+              Utilisez le formulaire ci-dessus pour ajouter des participants
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[500px]">
+              <thead>
+                <tr className="border-b border-slate-200">
+                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-slate-700 text-sm">Participant</th>
+                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-slate-700 text-sm">Parts</th>
+                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-slate-700 text-sm">Montant</th>
+                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-slate-700 text-sm">
+                    Mois de Réception
+                  </th>
+                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-slate-700 text-sm">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {tontine.participants.map((participant) => (
+                  <tr key={participant.id} className="border-b border-slate-100 hover:bg-slate-50">
+                    <td className="py-3 px-2 sm:px-4">
+                      <div className="font-medium text-slate-800 text-sm">
+                        {participant.prenom} {participant.nom}
+                      </div>
+                    </td>
+                    <td className="py-3 px-2 sm:px-4 text-slate-700 text-sm">{participant.parts}</td>
+                    <td className="py-3 px-2 sm:px-4 text-slate-700 text-sm">
+                      {(tontine.montant * participant.parts).toLocaleString()} FC
+                    </td>
+                    <td className="py-3 px-2 sm:px-4 text-slate-700 text-sm">
+                      <span className="bg-bleu-ciel text-white px-2 py-1 rounded-full text-xs">
+                        Mois {getParticipantMonth(tontine, participant.id)}
+                      </span>
+                    </td>
+                    <td className="py-3 px-2 sm:px-4">
+                      <button
+                        onClick={() => handleRemove(participant.id)}
+                        disabled={isLoading}
+                        className="px-2 sm:px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition-colors disabled:opacity-50"
+                      >
+                        Supprimer
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   )

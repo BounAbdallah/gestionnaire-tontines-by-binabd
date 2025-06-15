@@ -3,6 +3,7 @@
 import type React from "react"
 import { formatDateShort, getProgressPercentage } from "../utils/dateUtils"
 import type { Statistics, Tontine } from "../types"
+import VisitorStatsComponent from "./VisitorStats"
 
 interface DashboardProps {
   statistics: Statistics
@@ -57,8 +58,11 @@ const Dashboard: React.FC<DashboardProps> = ({ statistics, tontines, onTontineSe
         ))}
       </div>
 
+      {/* Visitor Statistics - Only for Super Admin */}
+      {statistics.totalUtilisateurs !== undefined && <VisitorStatsComponent currentUser={{ role: "super_admin" }} />}
+
       {/* Database Status */}
-      <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+      {/* <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
         <h3 className="text-lg sm:text-xl font-semibold text-bleu-nuit mb-4 flex items-center gap-2">
           🗄️ État de la Base de Données
         </h3>
@@ -66,16 +70,16 @@ const Dashboard: React.FC<DashboardProps> = ({ statistics, tontines, onTontineSe
           <div className="bg-green-50 border border-green-200 p-3 rounded-lg">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-sm font-medium text-green-800"> Connecté</span>
+              <span className="text-sm font-medium text-green-800">SQLite Connecté</span>
             </div>
-            <p className="text-xs text-green-600 mt-1"></p>
+            <p className="text-xs text-green-600 mt-1">Base de données opérationnelle</p>
           </div>
           <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
               <span className="text-sm font-medium text-blue-800">Tables Créées</span>
             </div>
-
+            <p className="text-xs text-blue-600 mt-1">Structure initialisée</p>
           </div>
           <div className="bg-purple-50 border border-purple-200 p-3 rounded-lg">
             <div className="flex items-center gap-2">
@@ -85,7 +89,7 @@ const Dashboard: React.FC<DashboardProps> = ({ statistics, tontines, onTontineSe
             <p className="text-xs text-purple-600 mt-1">Traçabilité complète</p>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Active Tontines */}
       <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">

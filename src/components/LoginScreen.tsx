@@ -6,10 +6,11 @@ import type { LoginCredentials, LoginResult } from "../types"
 
 interface LoginScreenProps {
   onLogin: (credentials: LoginCredentials) => Promise<LoginResult>
+  onShowRegistration: () => void
   isLoading: boolean
 }
 
-const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, isLoading }) => {
+const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onShowRegistration, isLoading }) => {
   const [credentials, setCredentials] = useState<LoginCredentials>({
     username: "",
     password: "",
@@ -39,7 +40,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, isLoading }) => {
       <div className="bg-white rounded-xl shadow-2xl p-6 sm:p-8 w-full max-w-md">
         <div className="text-center mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-bleu-nuit mb-2">Gestion des Tontines</h1>
-          <p className="text-slate-600 text-sm sm:text-base">Connexion Administrateur</p>
+          <p className="text-slate-600 text-sm sm:text-base">Connexion à votre compte</p>
           <div className="mt-2 text-xs text-slate-500">
             <p>⚛️ Application React TypeScript avec SQLite</p>
           </div>
@@ -55,7 +56,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, isLoading }) => {
               value={credentials.username}
               onChange={handleChange}
               className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-bleu-ciel focus:border-transparent text-sm sm:text-base"
-              placeholder="admin"
+              placeholder="Votre nom d'utilisateur"
             />
           </div>
 
@@ -83,15 +84,17 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, isLoading }) => {
           </button>
         </form>
 
-        <div className="mt-4 sm:mt-6 text-center text-xs sm:text-sm text-slate-500 bg-slate-50 p-3 rounded">
-          <p className="font-medium mb-1">Identifiants par défaut:</p>
-          <p>
-            Utilisateur: <strong>admin</strong>
-          </p>
-          <p>
-            Mot de passe: <strong>admin123</strong>
-          </p>
+        <div className="mt-6 text-center">
+          <p className="text-sm text-slate-600 mb-3">Vous n'avez pas de compte ?</p>
+          <button
+            onClick={onShowRegistration}
+            className="w-full px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors text-sm font-medium"
+          >
+            Créer un compte
+          </button>
         </div>
+
+     
       </div>
     </div>
   )

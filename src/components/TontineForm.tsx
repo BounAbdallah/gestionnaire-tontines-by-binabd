@@ -4,15 +4,16 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { db } from "../../lib/database"
 import { addMonths } from "../utils/dateUtils"
-import type { Tontine, TontineFormData } from "../types"
+import type { Tontine, TontineFormData, User } from "../types"
 
 interface TontineFormProps {
   editingTontine: Tontine | null
   onSuccess: () => void
   onCancel: () => void
+  currentUser: User
 }
 
-const TontineForm: React.FC<TontineFormProps> = ({ editingTontine, onSuccess, onCancel }) => {
+const TontineForm: React.FC<TontineFormProps> = ({ editingTontine, onSuccess, onCancel, currentUser }) => {
   const [formData, setFormData] = useState<TontineFormData>({
     nom: "",
     montant: 0,
@@ -87,23 +88,24 @@ const TontineForm: React.FC<TontineFormProps> = ({ editingTontine, onSuccess, on
 
     try {
       if (editingTontine) {
-        await db.updateTontine(editingTontine.id, formData)
+        await db.updateTontine(editingTontine.id, formData, currentUser.id)
       } else {
         const newTontine: Tontine = {
           id: generateId(),
+          proprietaire_id: currentUser.id,
           ...formData,
           participants: [],
           dateCreation: new Date().toISOString(),
           monthlyPayments: {},
           participantOrder: [],
         }
-        await db.createTontine(newTontine)
+        await db.createTontine(newTontine, currentUser.id)
       }
 
       onSuccess()
     } catch (error) {
       console.error("Erreur lors de la sauvegarde:", error)
-      alert("Erreur lors de la sauvegarde de la tontine")
+      alert(error instanceof Error ? error.message : "Erreur lors de la sauvegarde de la tontine")
     } finally {
       setIsLoading(false)
     }
@@ -135,6 +137,7 @@ const TontineForm: React.FC<TontineFormProps> = ({ editingTontine, onSuccess, on
             name="montant"
             type="number"
             required
+            min="1000"
             value={formData.montant}
             onChange={handleChange}
             className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-bleu-ciel focus:border-transparent text-sm"
@@ -148,6 +151,7 @@ const TontineForm: React.FC<TontineFormProps> = ({ editingTontine, onSuccess, on
             name="nombreParticipants"
             type="number"
             min="2"
+            max="20"
             required
             value={formData.nombreParticipants}
             onChange={handleChange}
@@ -162,6 +166,7 @@ const TontineForm: React.FC<TontineFormProps> = ({ editingTontine, onSuccess, on
             name="duree"
             type="number"
             min="1"
+            max="24"
             required
             value={formData.duree}
             onChange={handleChange}
@@ -178,6 +183,7 @@ const TontineForm: React.FC<TontineFormProps> = ({ editingTontine, onSuccess, on
             required
             value={formData.dateDebut}
             onChange={handleChange}
+            min={new Date().toISOString().split("T")[0]}
             className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-bleu-ciel focus:border-transparent text-sm"
           />
         </div>

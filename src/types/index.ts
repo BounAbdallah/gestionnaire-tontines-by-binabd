@@ -1,8 +1,36 @@
 export interface User {
   id: number
   username: string
+  email: string
   nom: string
-  role: string
+  prenom: string
+  telephone?: string
+  role: "super_admin" | "admin" | "user"
+  statut: "en_attente" | "approuve" | "rejete" | "suspendu"
+  limite_tontines: number
+  tontines_creees: number
+  date_creation: string
+  date_approbation?: string
+  date_derniere_connexion?: string
+  approuve_par?: number
+  motif_rejet?: string
+  actif: boolean
+}
+
+export interface RegistrationRequest {
+  id?: number
+  username: string
+  email: string
+  nom: string
+  prenom: string
+  telephone?: string
+  password: string
+  motif_inscription: string
+  statut: "en_attente" | "approuve" | "rejete"
+  date_demande: string
+  date_traitement?: string
+  traite_par?: number
+  commentaire_admin?: string
 }
 
 export interface Participant {
@@ -16,6 +44,7 @@ export interface Participant {
 
 export interface Tontine {
   id: string
+  proprietaire_id: number
   nom: string
   montant: number
   nombreParticipants: number
@@ -43,6 +72,9 @@ export interface Statistics {
   totalParticipants: number
   totalMontant: number
   tontinesActives: number
+  totalUtilisateurs?: number
+  utilisateursActifs?: number
+  demandesEnAttente?: number
 }
 
 export interface ActivityLog {
@@ -52,6 +84,27 @@ export interface ActivityLog {
   username?: string
   dateAction: string
   tontineId?: string
+  cible_utilisateur_id?: number
+  userId?: number // Ajouter cette propriété
+}
+
+export interface Visitor {
+  id: number
+  adresse_ip?: string
+  user_agent?: string
+  date_visite: string
+  page_visitee?: string
+  duree_session?: number
+  utilisateur_id?: number
+  statut_visite: "anonyme" | "connecte"
+}
+
+export interface VisitorStats {
+  totalVisiteurs: number
+  visiteursAujourdhui: number
+  visiteursCetteSemaine: number
+  visiteursConnectes: number
+  visiteursAnonymes: number
 }
 
 export interface LoginCredentials {
@@ -59,9 +112,21 @@ export interface LoginCredentials {
   password: string
 }
 
+export interface RegistrationData {
+  username: string
+  email: string
+  nom: string
+  prenom: string
+  telephone?: string
+  password: string
+  confirmPassword: string
+  motif_inscription: string
+}
+
 export interface LoginResult {
   success: boolean
   error?: string
+  user?: User
 }
 
 export interface MonthData {
@@ -108,4 +173,11 @@ export interface ParticipantFormData {
   prenom: string
   nom: string
   parts: number
+}
+
+export interface UserManagementData {
+  user: User
+  limite_tontines: number
+  actif: boolean
+  commentaire?: string
 }

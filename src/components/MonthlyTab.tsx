@@ -4,14 +4,15 @@ import type React from "react"
 import { useState } from "react"
 import { db } from "../../lib/database"
 import { formatDate, addMonths } from "../utils/dateUtils"
-import type { Tontine, MonthData, PaymentRatio, MonthStatus, Participant } from "../types"
+import type { Tontine, MonthData, PaymentRatio, MonthStatus, Participant, User } from "../types"
 
 interface MonthlyTabProps {
   tontine: Tontine
   onRefresh: () => void
+  currentUser: User
 }
 
-const MonthlyTab: React.FC<MonthlyTabProps> = ({ tontine, onRefresh }) => {
+const MonthlyTab: React.FC<MonthlyTabProps> = ({ tontine, onRefresh, currentUser }) => {
   const [selectedMonthDetail, setSelectedMonthDetail] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
@@ -140,7 +141,7 @@ const MonthlyTab: React.FC<MonthlyTabProps> = ({ tontine, onRefresh }) => {
     setIsLoading(true)
 
     try {
-      await db.setMonthBeneficiary(tontine.id, participantId, monthNumber)
+      await db.setMonthBeneficiary(tontine.id, participantId, monthNumber, currentUser.id)
       onRefresh()
     } catch (error) {
       console.error("Erreur lors de la définition du bénéficiaire:", error)
@@ -155,7 +156,13 @@ const MonthlyTab: React.FC<MonthlyTabProps> = ({ tontine, onRefresh }) => {
 
     try {
       const currentStatus = getPaymentStatus(participant, month)
-      await db.updatePaymentStatus(tontine.id, participant.id, month, currentStatus ? "non_paye" : "paye")
+      await db.updatePaymentStatus(
+        tontine.id,
+        participant.id,
+        month,
+        currentStatus ? "non_paye" : "paye",
+        currentUser.id,
+      )
       onRefresh()
     } catch (error) {
       console.error("Erreur lors de la mise à jour du paiement:", error)
@@ -170,7 +177,7 @@ const MonthlyTab: React.FC<MonthlyTabProps> = ({ tontine, onRefresh }) => {
 
     try {
       for (const participant of tontine.participants) {
-        await db.updatePaymentStatus(tontine.id, participant.id, monthNumber, "paye")
+        await db.updatePaymentStatus(tontine.id, participant.id, monthNumber, "paye", currentUser.id)
       }
       onRefresh()
     } catch (error) {
@@ -186,7 +193,7 @@ const MonthlyTab: React.FC<MonthlyTabProps> = ({ tontine, onRefresh }) => {
 
     try {
       for (const participant of tontine.participants) {
-        await db.updatePaymentStatus(tontine.id, participant.id, monthNumber, "non_paye")
+        await db.updatePaymentStatus(tontine.id, participant.id, monthNumber, "non_paye", currentUser.id)
       }
       onRefresh()
     } catch (error) {
@@ -220,7 +227,7 @@ const MonthlyTab: React.FC<MonthlyTabProps> = ({ tontine, onRefresh }) => {
 
       try {
         for (const participant of tontine.participants) {
-          await db.updatePaymentStatus(tontine.id, participant.id, monthNumber, "non_paye")
+          await db.updatePaymentStatus(tontine.id, participant.id, monthNumber, "non_paye", currentUser.id)
         }
         onRefresh()
       } catch (error) {
@@ -230,6 +237,18 @@ const MonthlyTab: React.FC<MonthlyTabProps> = ({ tontine, onRefresh }) => {
         setIsLoading(false)
       }
     }
+  }
+
+  if (tontine.participants.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <div className="text-4xl mb-2">📅</div>
+        <p className="text-slate-500">Ajoutez d'abord des participants pour gérer les mois</p>
+        <p className="text-slate-400 text-sm mt-2">
+          Utilisez l'onglet "Participants" pour ajouter des membres à votre tontine
+        </p>
+      </div>
+    )
   }
 
   return (
